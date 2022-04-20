@@ -105,7 +105,7 @@ def convert_to_nifty(in_dir, out_dir, verbose=False, use_multi_process=True):
         if verbose:
             print('creating output directory for exported patient data', out_dir)
         os.makedirs(out_dir)
-    patient_dirs = os.listdir(in_dir)[:20]
+    patient_dirs = os.listdir(in_dir)
     if verbose:
         print(f'found {len(patient_dirs)} patient directories')
 
