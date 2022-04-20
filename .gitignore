@@ -1,3 +1,8 @@
+
+# run.sh is the file that supplies the command line arguments. These are specific to the local setup and should not be included in git
+run.sh
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
