@@ -18,7 +18,7 @@ These are converted to Nifty (nii.gz) to work with the ANTS registration softwar
 
 ### Command line usage
 
-``
+```
 usage: convert_dicom_to_nifty.py [-h] [-v] input output
 
 Dicom conversion utility. Convert from dicom to nifty
@@ -30,7 +30,7 @@ positional arguments:
 optional arguments:
   -h, --help     show this help message and exit
   -v, --verbose  increase verbosity (default: False)
-``
+```
 
 
 
