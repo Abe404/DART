@@ -68,19 +68,66 @@ def get_3d_image(dicom_series_path):
     return image
 
 
+def get_dose_image(dicom_series_path):
+    fnames = os.listdir(dicom_series_path)
+    dose_dataset = None
+
+    for f in fnames:
+        fpath = os.path.join(dicom_series_path, f)
+        if os.path.isfile(fpath):
+            fdataset = pydicom.dcmread(fpath)
+            # RT Dose Storage SOP Class UID
+            # https://dicom.nema.org/dicom/2013/output/chtml/part04/sect_B.5.html
+            rt_dose_sop_class_uid = '1.2.840.10008.5.1.4.1.1.481.2'
+            if fdataset.SOPClassUID == rt_dose_sop_class_uid:
+                if not dose_dataset:
+                    dose_dataset = fdataset
+                else:
+                    raise Exception(f'Multiple dose files were found in {dicom_series_path}.'
+                                    'Please delete all dose files except the one which '
+                                    'you wish to accumulate.')
+    if not dose_dataset:
+        raise Exception(f'Could not find a dose dataset in {dicom_series_path}.')
+    # Get the dose grid
+    # Taking influence from: https://docs.pymedphys.com/_modules/pymedphys/_dicom/dose.html
+    dose_dataset.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+    dose = dose_dataset.pixel_array * dose_dataset.DoseGridScaling
+    return dose
+
+
 def convert_scan_to_nifty(in_dir, out_dir, verbose):
+
     if verbose:
         print('convert scan to nifty. input fraction path', in_dir, 'output fraction path', out_dir)     
+
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
-        if verbose:
-            print(f'creating {out_dir} to output scan as it did not exist')
-    numpy_image = get_3d_image(in_dir)
+
+
     out_path = os.path.join(out_dir, 'scan.nii.gz')
+    if not os.path.isfile(out_path):
+        numpy_image = get_3d_image(in_dir)
+
+        if verbose:
+            print('saving scan to', out_path)
+        img = nib.Nifti1Image(numpy_image, np.eye(4))
+        img.to_filename(out_path)
+
+
+def convert_dose_to_nifty(in_dir, out_dir, verbose):
     if verbose:
-        print('saving scan to', out_path)
-    img = nib.Nifti1Image(numpy_image, np.eye(4))
-    img.to_filename(out_path)
+        print('convert dose to nifty. input fraction path', in_dir, 'output fraction path', out_dir)     
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+
+    out_path = os.path.join(out_dir, 'dose.nii.gz')
+    if not os.path.isfile(out_path):
+        numpy_image = get_dose_image(in_dir)
+
+        if verbose:
+            print('saving dose to', out_path)
+        img = nib.Nifti1Image(numpy_image, np.eye(4))
+        img.to_filename(out_path)
 
 
 def multi_process(func, in_paths, out_paths, verbose, cpus=os.cpu_count()):
@@ -98,7 +145,6 @@ def multi_process(func, in_paths, out_paths, verbose, cpus=os.cpu_count()):
     return results
 
 
-
 def convert_to_nifty(in_dir, out_dir, verbose=False, use_multi_process=True):
     # if the output folder does not exist then create it
     if not os.path.isdir(out_dir):
@@ -107,7 +153,7 @@ def convert_to_nifty(in_dir, out_dir, verbose=False, use_multi_process=True):
         os.makedirs(out_dir)
     patient_dirs = os.listdir(in_dir)
     if verbose:
-        print(f'found {len(patient_dirs)} patient directories')
+        print(f"found {len(patient_dirs)} patient directories")
 
     input_paths = []
     output_paths = []
@@ -129,10 +175,12 @@ def convert_to_nifty(in_dir, out_dir, verbose=False, use_multi_process=True):
     if input_paths:
         if use_multi_process:
             multi_process(convert_scan_to_nifty, input_paths, output_paths, verbose)
+            multi_process(convert_dose_to_nifty, input_paths, output_paths, verbose)
         else:
             # single process
             for fraction_path, output_path in zip(input_paths, output_paths):
                 convert_scan_to_nifty(fraction_path, output_path, verbose)
+                convert_dose_to_nifty(fraction_path, output_path, verbose)
     else:
         print('Could not find suitable input paths in', in_dir)
 
