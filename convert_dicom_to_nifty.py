@@ -24,7 +24,7 @@ There may also be other files such as the plan which can be ignored.
 import argparse
 import pydicom
 import numpy as np
-
+import os
 
 def load_image_series(dicom_dir):
     """
@@ -65,8 +65,9 @@ def get_3d_image(dicom_series_path):
     return image
 
 
-def convert_scan_to_nifty(in_dir, out_dir):
-    print('convert scan to nifty. input fraction path = ', in_dir, 'output fraction path', out_dir)     
+def convert_scan_to_nifty(in_dir, out_dir, verbose):
+    if verbose:
+        print('convert scan to nifty. input fraction path', in_dir, 'output fraction path', out_dir)     
 
 
 def convert_to_nifty(in_dir, out_dir, verbose=False):
@@ -87,7 +88,8 @@ def convert_to_nifty(in_dir, out_dir, verbose=False):
             fraction_path = os.path.join(in_dir, patient_dir, fraction_dir)
             if verbose:
                 print('processing', fraction_path)
-            convert_scan_to_nifty(fraction_path, output_path)
+            output_path = os.path.join(out_dir, patient_dir, fraction_dir)
+            convert_scan_to_nifty(fraction_path, output_path, verbose)
 
 
 if __name__ == '__main__':
