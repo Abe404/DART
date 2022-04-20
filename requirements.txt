@@ -1,2 +1,3 @@
 numpy==1.22.3
 pydicom==2.3.0
+nibabel==3.2.2
