@@ -35,7 +35,7 @@ optional arguments:
 
 ## Road map
 
-Legeng:
+Legend:
 * 🚧 - Under construction (not yet implemented).
 
 * Convet a folder of dicoms to niftys as this is required for ANTS to run. 🚧
