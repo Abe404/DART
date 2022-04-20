@@ -33,6 +33,21 @@ optional arguments:
 ```
 
 
+## Road map
 
+Legeng:
+* 🚧 - Under construction (not yet implemented).
 
-
+* Convet a folder of dicoms to niftys as this is required for ANTS to run. 🚧
+* * Scans 🚧
+* * Dose 🚧
+* * Structures 🚧
+* Compute ANTS registration on the folder of nifty scans 🚧
+* Run computed ants registration on: 
+* * Images - To allow for visual inspection and compute mutual information 🚧
+* * Dose - To allow dose summation (giving hopefully more accurate dose to each organ) 🚧
+* * Structures - To allow evaluation of registration accuracy by computing resultant segmentation metrics such as dice or hd. 🚧
+* Sum dose - Performed on dose files and giving a resultant dose for each patient. 🚧
+* Compute metrics - Compute segment metrics on the original contour and transformed (registered) contours. 🚧
+* Compute jacobian - Another image which displays characteristics of the deformation field (did any local regions fold?) 🚧
+* Compute MI - Mutual information - Could give an indication if the registration was performed successfully. 🚧
