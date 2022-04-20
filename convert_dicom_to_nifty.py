@@ -25,6 +25,9 @@ import argparse
 import pydicom
 import numpy as np
 import os
+import nibabel as nib
+import time
+from multiprocessing import Pool
 
 def load_image_series(dicom_dir):
     """
@@ -68,28 +71,70 @@ def get_3d_image(dicom_series_path):
 def convert_scan_to_nifty(in_dir, out_dir, verbose):
     if verbose:
         print('convert scan to nifty. input fraction path', in_dir, 'output fraction path', out_dir)     
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+        if verbose:
+            print(f'creating {out_dir} to output scan as it did not exist')
+    numpy_image = get_3d_image(in_dir)
+    out_path = os.path.join(out_dir, 'scan.nii.gz')
+    if verbose:
+        print('saving scan to', out_path)
+    img = nib.Nifti1Image(numpy_image, np.eye(4))
+    img.to_filename(out_path)
 
 
-def convert_to_nifty(in_dir, out_dir, verbose=False):
+def multi_process(func, in_paths, out_paths, verbose, cpus=os.cpu_count()):
+    print('calling', func.__name__, 'on', len(in_paths), 'items')
+    start = time.time()
+    pool = Pool(cpus)
+    async_results = []
+    for in_path, out_path in zip(in_paths, out_paths):
+        res = pool.apply_async(func, args=[in_path, out_path, verbose])
+        async_results.append(res)
+    pool.close()
+    pool.join()
+    results = [res.get() for res in async_results]
+    print(func.__name__, 'on', len(in_paths), 'items took', time.time() - start)
+    return results
+
+
+
+def convert_to_nifty(in_dir, out_dir, verbose=False, use_multi_process=True):
     # if the output folder does not exist then create it
     if not os.path.isdir(out_dir):
         if verbose:
             print('creating output directory for exported patient data', out_dir)
         os.makedirs(out_dir)
-    patient_dirs = os.listdir(in_dir)
+    patient_dirs = os.listdir(in_dir)[:20]
     if verbose:
         print(f'found {len(patient_dirs)} patient directories')
+
+    input_paths = []
+    output_paths = []
+
     for patient_dir in patient_dirs:
         if verbose:
             print('processing', patient_dir)
         patient_path = os.path.join(in_dir, patient_dir)
         fraction_dirs = os.listdir(patient_path)
+
         for fraction_dir in fraction_dirs:
             fraction_path = os.path.join(in_dir, patient_dir, fraction_dir)
             if verbose:
                 print('processing', fraction_path)
             output_path = os.path.join(out_dir, patient_dir, fraction_dir)
-            convert_scan_to_nifty(fraction_path, output_path, verbose)
+            input_paths.append(fraction_path)
+            output_paths.append(output_path)
+
+    if input_paths:
+        if use_multi_process:
+            multi_process(convert_scan_to_nifty, input_paths, output_paths, verbose)
+        else:
+            # single process
+            for fraction_path, output_path in zip(input_paths, output_paths):
+                convert_scan_to_nifty(fraction_path, output_path, verbose)
+    else:
+        print('Could not find suitable input paths in', in_dir)
 
 
 if __name__ == '__main__':
@@ -100,4 +145,4 @@ if __name__ == '__main__':
     parser.add_argument("-v", "--verbose", action="store_true", help="increase verbosity")
     args = parser.parse_args()
     config = vars(args)
-    convert_to_nifty(config['input'], config['output'], config['verbose'])
+    convert_to_nifty(config['input'], config['output'], config['verbose'], use_multi_process=True)
