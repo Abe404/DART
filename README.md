@@ -37,7 +37,7 @@ optional arguments:
 Note: 🚧 = Under construction (not yet implemented).
 
 * Convet a folder of dicoms to niftys as this is required for ANTS to run. 🚧
-* * Scans
+* * Scans ✅
 * * Dose 🚧
 * * Structures 🚧
 * Compute ANTS registration on the folder of nifty scans 🚧
