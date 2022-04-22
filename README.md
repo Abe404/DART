@@ -54,6 +54,8 @@ Note: 🚧 = Under construction (not yet implemented).
 
 ## Development tools
 
+This module is only supported with >= python3.9
+
 RADON is used for measurement of cyclomatic complexity and maintainability index.
 
 To assess cylomatic complexity:
