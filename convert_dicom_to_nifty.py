@@ -116,7 +116,7 @@ def get_struct_image(dicom_series_path, struct_name):
     if not np.any(mask):
         raise Exception(f'Struct with name {struct_name} was not found in {dicom_series_path}'
                         ' or did not contain any delineation data.'
-                        'Are you sure that all structs of interest are named '
+                        ' Are you sure that all structs of interest are named '
                         'consistently and non-empty?')
     return mask
 
@@ -198,10 +198,10 @@ if __name__ == '__main__':
 
     parser.add_argument("input", help="Directory containing patient folders")
     parser.add_argument("output", help="Output location for nifty files")
-    parser.add_argument("--multiprocess", action=argparse.BooleanOptionalAction)
-    parser.add_argument("--structname", type=str, required=True, help="name of structure")
+    parser.add_argument("--multi-process", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--struct-name", type=str, required=True, help="name of structure")
     args = parser.parse_args()
     config = vars(args)
     print(config)
-    convert_all_patients_to_nifty(config['input'], config['output'], config['stuct_name'],
-                                  config['multi_process'])
+    convert_all_patients_to_nifty(config['input'], config['output'],
+                                  config['struct_name'], config['multi_process'])
