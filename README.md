@@ -19,17 +19,20 @@ These are converted to Nifty (nii.gz) to work with the ANTS registration softwar
 ### Command line usage
 
 ```
-usage: convert_dicom_to_nifty.py [-h] [-v] input output
+usage: convert_dicom_to_nifty.py [-h] [--multiprocess | --no-multiprocess] --structname STRUCTNAME input output
 
 Dicom conversion utility. Convert from dicom to nifty
 
 positional arguments:
-  input          Directory containing patient folders
-  output         Output location for nifty files
+  input                 Directory containing patient folders
+  output                Output location for nifty files
 
 optional arguments:
-  -h, --help     show this help message and exit
-  -v, --verbose  increase verbosity (default: False)
+  -h, --help            show this help message and exit
+  --multiprocess, --no-multiprocess
+  --structname STRUCTNAME
+                        name of structure (default: None)
+
 ```
 
 ## Road map
