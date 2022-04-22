@@ -27,7 +27,6 @@ from multiprocessing import Pool
 from enum import Enum
 import argparse
 import time
-import sys
 import logging
 
 import pydicom
