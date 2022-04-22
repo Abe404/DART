@@ -1,3 +1,5 @@
 numpy==1.22.3
 pydicom==2.3.0
 nibabel==3.2.2
+pylint==2.13.7
+radon==5.1.0
