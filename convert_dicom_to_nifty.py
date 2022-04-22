@@ -21,13 +21,24 @@ Each fraction is a folder containing dicom files.
 The dicom files for each fraction include files for the scan, dose and structure.
 There may also be other files such as the plan which can be ignored.
 """
+
+import os
+from multiprocessing import Pool
+from enum import Enum
 import argparse
+import time
+import sys
+import logging
+
 import pydicom
 import numpy as np
-import os
 import nibabel as nib
-import time
-from multiprocessing import Pool
+from dicom_mask.convert import struct_to_mask
+
+class ImageType(Enum):
+    STRUCT = 1
+    SCAN = 2
+    DOSE = 3
 
 def load_image_series(dicom_dir):
     """
@@ -48,7 +59,7 @@ def load_image_series(dicom_dir):
     return image_series
 
 
-def get_3d_image(dicom_series_path):
+def get_scan_image(dicom_series_path):
     """ return dicom images as 3D numpy array 
 
         warning: this function assumes the file names
@@ -95,102 +106,105 @@ def get_dose_image(dicom_series_path):
     return dose
 
 
-def convert_scan_to_nifty(in_dir, out_dir, verbose):
+def get_struct_image(dicom_series_path, struct_name):
+    dicom_files = [d for d in os.listdir(dicom_series_path) if d.endswith('.dcm')]
 
-    if verbose:
-        print('convert scan to nifty. input fraction path', in_dir, 'output fraction path', out_dir)     
+    # We assume here that you identified a single struct for each fraction
+    # and given it the same name in all fractions in order for it to be exported.
+    # This may require a pre-processing or manual checking to ensure that
+    # your structs of interest all have the same names.
+    mask = struct_to_mask(dicom_series_path, dicom_files, struct_name)
+    if not np.any(mask):
+        raise Exception(f'Struct with name {struct_name} was not found in {dicom_series_path}'
+                        ' or did not contain any delineation data.'
+                        'Are you sure that all structs of interest are named '
+                        'consistently and non-empty?')
+    return mask
 
+def convert_fraction_to_nifty(in_dir, out_dir, struct_name):
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
 
+    for image_type in ImageType:
+        out_path = os.path.join(out_dir, f'{image_type}.nii.gz')
+        if not os.path.isfile(out_path):
 
-    out_path = os.path.join(out_dir, 'scan.nii.gz')
-    if not os.path.isfile(out_path):
-        numpy_image = get_3d_image(in_dir)
-
-        if verbose:
-            print('saving scan to', out_path)
-        img = nib.Nifti1Image(numpy_image, np.eye(4))
-        img.to_filename(out_path)
-
-
-def convert_dose_to_nifty(in_dir, out_dir, verbose):
-    if verbose:
-        print('convert dose to nifty. input fraction path', in_dir, 'output fraction path', out_dir)     
-    if not os.path.isdir(out_dir):
-        os.makedirs(out_dir)
-
-    out_path = os.path.join(out_dir, 'dose.nii.gz')
-    if not os.path.isfile(out_path):
-        numpy_image = get_dose_image(in_dir)
-
-        if verbose:
-            print('saving dose to', out_path)
-        img = nib.Nifti1Image(numpy_image, np.eye(4))
-        img.to_filename(out_path)
+            if image_type == ImageType.SCAN:
+                numpy_image = get_scan_image(in_dir)
+            elif image_type == ImageType.DOSE:
+                numpy_image = get_dose_image(in_dir)
+            elif image_type == ImageType.STRUCT:
+                numpy_image = get_struct_image(in_dir, struct_name)
+            else:
+                raise Exception(f'Unhandled {image_type}')
+            logging.info(f'saving {image_type} to {out_path}')
+            img = nib.Nifti1Image(numpy_image, np.eye(4))
+            img.to_filename(out_path)
 
 
-def multi_process(func, in_paths, out_paths, verbose, cpus=os.cpu_count()):
+def multi_process(func, in_paths, out_paths, struct_name, cpus=os.cpu_count()):
     print('calling', func.__name__, 'on', len(in_paths), 'items')
     start = time.time()
-    pool = Pool(cpus)
-    async_results = []
-    for in_path, out_path in zip(in_paths, out_paths):
-        res = pool.apply_async(func, args=[in_path, out_path, verbose])
-        async_results.append(res)
-    pool.close()
-    pool.join()
-    results = [res.get() for res in async_results]
-    print(func.__name__, 'on', len(in_paths), 'items took', time.time() - start)
-    return results
+    with Pool(cpus) as pool:
+        async_results = []
+        for in_path, out_path in zip(in_paths, out_paths):
+            res = pool.apply_async(func, args=[in_path, out_path, struct_name])
+            async_results.append(res)
+        pool.close()
+        pool.join()
+        results = [res.get() for res in async_results]
+        print(func.__name__, 'on', len(in_paths), 'items took', time.time() - start)
+        return results
 
 
-def convert_to_nifty(in_dir, out_dir, verbose=False, use_multi_process=True):
+def convert_all_patients_to_nifty(in_dir, out_dir, struct_name, use_multi_process=True):
     # if the output folder does not exist then create it
     if not os.path.isdir(out_dir):
-        if verbose:
-            print('creating output directory for exported patient data', out_dir)
+        logging.info(f'creating output directory for exported patient data {out_dir}')
         os.makedirs(out_dir)
     patient_dirs = os.listdir(in_dir)
-    if verbose:
-        print(f"found {len(patient_dirs)} patient directories")
 
+    logging.info(f"found {len(patient_dirs)} patient directories")
     input_paths = []
     output_paths = []
 
     for patient_dir in patient_dirs:
-        if verbose:
-            print('processing', patient_dir)
+        logging.info(f'processing {patient_dir}')
         patient_path = os.path.join(in_dir, patient_dir)
         fraction_dirs = os.listdir(patient_path)
 
         for fraction_dir in fraction_dirs:
             fraction_path = os.path.join(in_dir, patient_dir, fraction_dir)
-            if verbose:
-                print('processing', fraction_path)
+            logging.info(f'processing {fraction_path}')
             output_path = os.path.join(out_dir, patient_dir, fraction_dir)
             input_paths.append(fraction_path)
             output_paths.append(output_path)
 
-    if input_paths:
-        if use_multi_process:
-            multi_process(convert_scan_to_nifty, input_paths, output_paths, verbose)
-            multi_process(convert_dose_to_nifty, input_paths, output_paths, verbose)
-        else:
-            # single process
-            for fraction_path, output_path in zip(input_paths, output_paths):
-                convert_scan_to_nifty(fraction_path, output_path, verbose)
-                convert_dose_to_nifty(fraction_path, output_path, verbose)
+    assert input_paths, f'Could not find suitable input paths in {in_dir}'
+
+    if use_multi_process:
+        for fraction_path, output_path in zip(input_paths, output_paths):
+            multi_process(convert_fraction_to_nifty, input_paths,
+                          output_paths, struct_name)
     else:
-        print('Could not find suitable input paths in', in_dir)
+        # single process
+        for fraction_path, output_path in zip(input_paths, output_paths):
+            convert_fraction_to_nifty(fraction_path, output_path, struct_name)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Dicom conversion utility. Convert from dicom to nifty",
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+                description="Dicom conversion utility. Convert from dicom to nifty",
+                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
     parser.add_argument("input", help="Directory containing patient folders")
     parser.add_argument("output", help="Output location for nifty files")
-    parser.add_argument("-v", "--verbose", action="store_true", help="increase verbosity")
+    parser.add_argument("-m", "--multi-process", action="store_true",
+                        default=True, help="use multiprocessing")
+    parser.add_argument("-s", "--struct-name", action="store_true",
+                        default=True, help="name of structure")
     args = parser.parse_args()
     config = vars(args)
-    convert_to_nifty(config['input'], config['output'], config['verbose'], use_multi_process=True)
+    sys.exit()
+    convert_all_patients_to_nifty(config['input'], config['output'], config['stuct_name'],
+                                  config['multi_process'])
