@@ -49,3 +49,21 @@ Note: 🚧 = Under construction (not yet implemented).
 * Compute metrics - Compute segment metrics on the original contour and transformed (registered) contours. 🚧
 * Compute jacobian - Another image which displays characteristics of the deformation field (did any local regions fold?) 🚧
 * Compute MI - Mutual information - Could give an indication if the registration was performed successfully. 🚧
+
+
+
+## Development tools
+
+RADON is used for measurement of cyclomatic complexity and maintainability index.
+
+To assess cylomatic complexity:
+> radon cc file_path.py
+We aim to ensure all functions are rated B or above
+
+To assess maintainability index:
+> radon mi file_path.py
+We aim to ensure all files are rated B or above.
+
+To use pylint to check for errors
+> pylint file_path.py
+
