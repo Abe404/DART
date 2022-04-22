@@ -199,12 +199,10 @@ if __name__ == '__main__':
 
     parser.add_argument("input", help="Directory containing patient folders")
     parser.add_argument("output", help="Output location for nifty files")
-    parser.add_argument("-m", "--multi-process", action="store_true",
-                        default=True, help="use multiprocessing")
-    parser.add_argument("-s", "--struct-name", action="store_true",
-                        default=True, help="name of structure")
+    parser.add_argument("--multiprocess", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--structname", type=str, required=True, help="name of structure")
     args = parser.parse_args()
     config = vars(args)
-    sys.exit()
+    print(config)
     convert_all_patients_to_nifty(config['input'], config['output'], config['stuct_name'],
                                   config['multi_process'])
