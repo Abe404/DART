@@ -19,7 +19,7 @@ These are converted to Nifty (nii.gz) to work with the ANTS registration softwar
 ### Command line usage
 
 ```
-usage: convert_dicom_to_nifty.py [-h] [--multiprocess | --no-multiprocess] --structname STRUCTNAME input output
+usage: convert_dicom_to_nifty.py [-h] [--multi-process | --no-multi-process] --struct-name STRUCTNAME input output
 
 Dicom conversion utility. Convert from dicom to nifty
 
@@ -29,8 +29,8 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --multiprocess, --no-multiprocess
-  --structname STRUCTNAME
+  --multi-process, --no-multi-process
+  --struct-name STRUCTNAME
                         name of structure (default: None)
 
 ```
@@ -42,7 +42,7 @@ Note: 🚧 = Under construction (not yet implemented).
 * Convet a folder of dicoms to niftys as this is required for ANTS to run. 🚧
 * * Scans ✅
 * * Dose ✅
-* * Structures 🚧
+* * Structures ✅
 * Compute ANTS registration on the folder of nifty scans 🚧
 * Run computed ants registration on: 
 * * Images - To allow for visual inspection and compute mutual information 🚧
