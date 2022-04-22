@@ -113,6 +113,7 @@ def get_struct_image(dicom_series_path, struct_name):
     # This may require a pre-processing or manual checking to ensure that
     # your structs of interest all have the same names.
     mask = struct_to_mask(dicom_series_path, dicom_files, struct_name)
+    mask = np.flip(mask, axis=0)
     if not np.any(mask):
         raise Exception(f'Struct with name {struct_name} was not found in {dicom_series_path}'
                         ' or did not contain any delineation data.'
@@ -125,9 +126,8 @@ def convert_fraction_to_nifty(in_dir, out_dir, struct_name):
         os.makedirs(out_dir)
 
     for image_type in ImageType:
-        out_path = os.path.join(out_dir, f'{image_type}.nii.gz')
+        out_path = os.path.join(out_dir, f'{image_type.name.lower()}.nii.gz')
         if not os.path.isfile(out_path):
-
             if image_type == ImageType.SCAN:
                 numpy_image = get_scan_image(in_dir)
             elif image_type == ImageType.DOSE:
@@ -136,7 +136,8 @@ def convert_fraction_to_nifty(in_dir, out_dir, struct_name):
                 numpy_image = get_struct_image(in_dir, struct_name)
             else:
                 raise Exception(f'Unhandled {image_type}')
-            logging.info(f'saving {image_type} to {out_path}')
+            logging.info(f'saving {out_path}')
+            print(f'saving {out_path}')
             img = nib.Nifti1Image(numpy_image, np.eye(4))
             img.to_filename(out_path)
 
