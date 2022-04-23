@@ -3,6 +3,10 @@
 run.sh
 
 
+# dont need to check ANTs into the source code, this is someone elses code.
+ANTs/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
