@@ -20,8 +20,6 @@ def compute_all_registrations(in_dir, planning_scan_dir_name, scan_name):
     # same for all fractions (and the planning scan), with unique details being stored
     # in the folder names.
     patient_dirs = os.listdir(in_dir)[:2]
-    input_paths = []
-    output_paths = []
     for patient_dir in patient_dirs:
         patient_path = os.path.join(in_dir, patient_dir)
         fraction_dirs = os.listdir(patient_path)
@@ -30,10 +28,13 @@ def compute_all_registrations(in_dir, planning_scan_dir_name, scan_name):
         for fraction_dir in fraction_dirs:
             fraction_scan_path = os.path.join(in_dir, patient_dir,
                                               fraction_dir, scan_name)
-            planning_scan_path = os.path.join(in_dir, patient_dir, planning_scan_dir_name, scan_name)
+            planning_scan_path = os.path.join(in_dir, patient_dir,
+                                              planning_scan_dir_name,
+                                              scan_name)
 
             # output files will be called 'registered' and exist in the fraction directory.
-            output_path = os.path.join(in_dir, patient_dir, fraction_dir, 'registered')
+            output_path = os.path.join(in_dir, patient_dir,
+                                       fraction_dir, 'registered')
 
             # for documentation on antsRegistrationSyN.sh see:
             # https://github.com/ANTsX/ANTs/blob/master/Scripts/antsRegistrationSyN.sh 
@@ -52,8 +53,10 @@ if __name__ == '__main__':
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument("input", help="Directory containing patient folders (nifty files)")
-    parser.add_argument("plan_dir", help="Name of directory containing the planning scan (reference image)")
-    parser.add_argument("scan_name", help="Name of the scan files that will be registered, assumed same for all fractions.")
+    parser.add_argument("plan_dir", help="Name of directory containing the "
+                                         "planning scan (reference image)")
+    parser.add_argument("scan_name", help="Name of the scan files that will be registered,"
+                                          " assumed same for all fractions.")
     args = parser.parse_args()
     config = vars(args)
     print(config)
