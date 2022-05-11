@@ -40,12 +40,14 @@ def compute_all_registrations(in_dir, planning_scan_dir_name, scan_name):
             # https://github.com/ANTsX/ANTs/blob/master/Scripts/antsRegistrationSyN.sh 
 
             # register the fraction (moving image) to the planning scan (fixed image)
-            dimensions = 3
-            os.system(f'antsRegistrationSyN.sh -d {dimensions} '
-                      # transform type s:  rigid_affine+deformable syn (3 stages)'
-                      '-t s '
-                      f'-n {os.cpu_count()} ' # number of threads to use.
-                      f'{planning_scan_path} {fraction_scan_path} {output_path}')
+            cmd = (f'antsRegistrationSyN.sh -d 3 '
+                   '-t s ' # transform type s:  rigid_affine+deformable syn (3 stages)'
+                   f'-n {os.cpu_count()} ' # number of threads to use.
+                   f'-f {planning_scan_path} -m {fraction_scan_path} -o {output_path}')
+
+            print(cmd)
+            os.system(cmd)
+            exit()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
