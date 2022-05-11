@@ -67,8 +67,10 @@ if __name__ == '__main__':
                                          "planning scan (reference image)")
     parser.add_argument("scan_name", help="Name of the scan files that will be registered,"
                                           " assumed same for all fractions.")
-    parser.add_argument("--first-n", type=int, required=False, help="first n, number of patients to process (useful for testing)")
+    parser.add_argument("--first-n", type=int, required=False,
+                        help="first n, number of patients to process (useful for testing)")
     args = parser.parse_args()
     config = vars(args)
     print(config)
-    compute_all_registrations(config['input'], config['plan_dir'], config['scan_name'], config['first_n'])
+    compute_all_registrations(config['input'], config['plan_dir'],
+                              config['scan_name'], config['first_n'])
