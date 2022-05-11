@@ -121,6 +121,7 @@ def get_struct_image(dicom_series_path, struct_name):
                         'consistently and non-empty?')
     return mask
 
+
 def convert_fraction_to_nifty(in_dir, out_dir, struct_name):
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
@@ -162,11 +163,15 @@ def convert_all_patients_to_nifty(in_dir, out_dir, struct_name, use_multi_proces
     if not os.path.isdir(out_dir):
         logging.info(f'creating output directory for exported patient data {out_dir}')
         os.makedirs(out_dir)
+
+
     patient_dirs = os.listdir(in_dir)
 
     logging.info(f"found {len(patient_dirs)} patient directories")
     input_paths = []
     output_paths = []
+
+    
 
     for patient_dir in patient_dirs:
         logging.info(f'processing {patient_dir}')
@@ -176,7 +181,8 @@ def convert_all_patients_to_nifty(in_dir, out_dir, struct_name, use_multi_proces
         for fraction_dir in fraction_dirs:
             fraction_path = os.path.join(in_dir, patient_dir, fraction_dir)
             logging.info(f'processing {fraction_path}')
-            output_path = os.path.join(out_dir, patient_dir, fraction_dir)
+            # replace space with _ to make it easier to run ants commands on these paths.
+            output_path = os.path.join(out_dir, patient_dir, fraction_dir.replace(' ', '_'))
             input_paths.append(fraction_path)
             output_paths.append(output_path)
 
