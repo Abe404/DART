@@ -2,6 +2,9 @@
 # run.sh is the file that supplies the command line arguments. These are specific to the local setup and should not be included in git
 run.sh
 
+# install folder is where ants is installed and does not need to be checked into git
+install/
+
 
 # dont need to check ANTs into the source code, this is someone elses code.
 ANTs/
