@@ -4,3 +4,4 @@ nibabel==3.2.2
 pylint==2.13.7
 radon==5.1.0
 dicom-mask==0.0.25
+SimpleITK==2.1.1.2
