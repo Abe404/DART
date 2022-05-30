@@ -49,7 +49,35 @@ def compute_all_registrations(in_dir, planning_scan_dir_name, scan_name, first_n
             cmd = (f'antsRegistrationSyN.sh -d 3 '
                    '-t s ' # transform type s:  rigid_affine+deformable syn (3 stages)'
                    f'-n {os.cpu_count()} ' # number of threads to use.
-                   f'-f {planning_scan_path} -m {fraction_scan_path} -o {output_path}')
+                   f'-f {planning_scan_path} -m {fraction_scan_path} '
+
+                   # This output_path supplied (defined above) is used as 
+                   # the OUTPUTNAME variable in antsRegistrationSyn.sh script, which 
+                   # is then used to create the following output argument
+                   # for the antsRegistration executable.
+                   # --output [ $OUTPUTNAME,${OUTPUTNAME}Warped.nii.gz,${OUTPUTNAME}InverseWarped.nii.gz ] \
+                   # This output argument is document as follows (taken from antsRegistration docs:
+                    """   
+                    -o, --output outputTransformPrefix
+                              [outputTransformPrefix,<outputWarpedImage>,<outputInverseWarpedImage>]
+                        Specify the output transform prefix (output format is .nii.gz ). Optionally, one 
+                        can choose to warp the moving image to the fixed space and, if the inverse 
+                        transform exists, one can also output the warped fixed image. Note that only the 
+                        images specified in the first metric call are warped. Use antsApplyTransforms to 
+                        warp other images using the resultant transform(s). When a composite transform 
+                        is not specified, linear transforms are specified with a '.mat' suffix and 
+                        displacement fields with a 'Warp.nii.gz' suffix (and 'InverseWarp.nii.gz', when 
+                        applicable. In addition, for velocity-based transforms, the full velocity field 
+                        is written to file ('VelocityField.nii.gz') as long as the collapse transforms 
+                        flag is turned off ('-z 0'). 
+                    """
+                    # From the above docs we can see that <outputWarpedImage> is the moving image
+                    # transformed to the fixed image. Which in our case is the fraction
+                    # transformed to the MR SIM.
+                    
+                    # Concretely, in our case the fraction scan warped to the MR sim will be
+                    # named registeredWarped.nii.gz
+                   f'-o {output_path}')
 
             print(cmd)
             os.system(cmd)
