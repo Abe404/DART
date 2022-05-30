@@ -60,14 +60,18 @@ Note: 🚧 = Under construction (not yet implemented).
 * * Structures - To allow evaluation of registration accuracy by computing resultant segmentation metrics such as dice or hd. ✅
 * Sum dose - Performed on dose files and giving a resultant dose for each patient. ✅
 * Compute metrics - Compute segment metrics on the original contour and transformed (registered) contours. ✅
-* Compute jacobian - Another image which displays characteristics of the deformation field (did any local regions fold?) 🚧
-* Compute MI - Mutual information - Could give an indication if the registration was performed successfully. 🚧
+* Compute jacobian - Another image which displays characteristics of the deformation field (did any local regions fold?) ✅
+* Compute MI - Mutual information - Could give an indication if the registration was performed successfully. ✅
 
 
 
 ## Development tools
 
 This module is only supported with >= python3.9
+
+
+The script 'static_analysis.sh' should be used before commiting code.
+
 
 RADON is used for measurement of cyclomatic complexity and maintainability index.
 
