@@ -14,7 +14,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Take the transformations that have already been computed by 
 compute_ants_registrations.py and use them to transform the
-dose files to the fixed image.
+moving image files (such as dose or struct) to the fixed image.
 """
 
 import os
@@ -22,21 +22,25 @@ import argparse
 import time
 
 
-def transform_dose_to_fixed_image(moving_image_dir_path,
-                                  dose_file_name,
-                                  fixed_image_path):
+def transform_moving_image_to_fixed_image(moving_image_dir_path,
+                                          moving_image_file_name,
+                                          planning_dir_name,
+                                          fixed_image_path):
     """
     Transforms for one fraction
 
     moving_image_dir_path - most likely the path to the fraction directory
-    dose_file_name - name of the dose file (assumed consistent for all fractions)
+    moving_image_file_name - name of the moving_image file (assumed consistent for all fractions)
     fixed_image_path - full path to the fixed image. likely a 
                        reference scan used for computing the registration.
     """
 
     start_time = time.time()
-    output_path = os.path.join(moving_image_dir_path, 'dose_transformed_to_fixed.nii.gz')
-    moving_image_path = os.path.join(moving_image_dir_path, dose_file_name)
+    output_path = os.path.join(moving_image_dir_path, 
+        f'{os.path.basename(moving_image_file_name.replace(".nii.gz", ""))}'
+        f'_transformed_to_{planning_dir_name}.nii.gz')
+
+    moving_image_path = os.path.join(moving_image_dir_path, moving_image_file_name)
     
     # tranforms moving image to fixed image
     deformable_transform = os.path.join(moving_image_dir_path, 'registered1Warp.nii.gz')
@@ -51,14 +55,14 @@ def transform_dose_to_fixed_image(moving_image_dir_path,
     print(f'time for {moving_image_dir_path}: {time.time() - start_time} seconds')
 
 
-def transform_doses_to_fixed_images(in_dir, planning_dir_name,
-                                    dose_file_name,
+def transform_moving_images_to_fixed_images(in_dir, planning_dir_name,
+                                    moving_image_file_name,
                                     fixed_image_name, first_n, patient_dir):
     """
         Transforms for all patients. 
         in_dir  - directory containing all the patient folders.
         planning_dir_name - folder containing the fixed image.
-        dose_file_name - name of the actual dose file. We assume this is the
+        moving_image_file_name - name of the actual moving_image file. We assume this is the
                          same for all fractions (and the planning scan),
                          with unique details being stored in the folder names.
         fixed_image_name - The name of the image that was used as 
@@ -81,22 +85,23 @@ def transform_doses_to_fixed_images(in_dir, planning_dir_name,
 
         for fraction_dir in fraction_dirs:
             fraction_path = os.path.join(patient_path, fraction_dir)
-            transform_dose_to_fixed_image(
+            transform_moving_image_to_fixed_image(
                 moving_image_dir_path=fraction_path,
-                dose_file_name=dose_file_name,
+                moving_image_file_name=moving_image_file_name,
+                planning_dir_name=planning_dir_name,
                 fixed_image_path=os.path.join(patient_path, planning_dir_name, fixed_image_name))
 
             
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-                description="Apply ANTS transforms to transfer dose to fixed image",
+                description="Apply ANTS transforms to transfer moving_image to fixed image",
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument("input", help="Directory containing patient folders (nifty files)")
     parser.add_argument("plan_dir", help="Name of directory containing the "
                                          "planning scan (fixed image)")
-    parser.add_argument("dose_file_name",
-                        help="Name of the dose files that will be transformed,"
+    parser.add_argument("moving_image_file_name",
+                        help="Name of the moving_image files that will be transformed,"
                              " assumed same for all fractions.")
     parser.add_argument("fixed_image_name",
                         help="Name of the fixed image that was used for "
@@ -110,8 +115,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     config = vars(args)
     print(config)
-    transform_doses_to_fixed_images(config['input'], config['plan_dir'],
-                                    config['dose_file_name'],
-                                    config['fixed_image_name'],
-                                    config['first_n'],
-                                    config['patient_dir'])
+    transform_moving_images_to_fixed_images(config['input'], config['plan_dir'],
+                                            config['moving_image_file_name'],
+                                            config['fixed_image_name'],
+                                            config['first_n'],
+                                            config['patient_dir'])
