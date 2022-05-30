@@ -18,14 +18,13 @@ transform_dose.py and sum them for each patient.
 
 import os
 import argparse
-import time
 import SimpleITK as sitk
 
 
 def sum_doses_for_all_patients(in_dir, planning_dir_name,
                                plan_dose_file_name,
                                transformed_dose_file_name,
-                               first_n, patient_dir,
+                               patient_dir,
                                summed_dose_file_name):
     """
         in_dir  - directory containing all the patient folders.
@@ -36,9 +35,6 @@ def sum_doses_for_all_patients(in_dir, planning_dir_name,
         first_n - used to restrict processing for testing/debugging.
     """
     patient_dirs = os.listdir(in_dir)
-
-    if first_n:
-        patient_dirs = patient_dirs[:first_n]
     total_doses = 0
     if patient_dir:
         patient_dirs = [patient_dir]
@@ -46,19 +42,17 @@ def sum_doses_for_all_patients(in_dir, planning_dir_name,
 
     for patient in patient_dirs:
         patient_path = os.path.join(in_dir, patient)
-        fraction_dirs = os.listdir(patient_path)
-        fraction_dirs = [d for d in fraction_dirs if d != planning_dir_name]
+        fraction_dirs = [d for d in os.listdir(patient_path) if d != planning_dir_name]
         plan_dose_path = os.path.join(patient_path, planning_dir_name, plan_dose_file_name)
         dose_sum = sitk.ReadImage(plan_dose_path, sitk.sitkFloat32)
-        total_doses += 1
         for fraction_dir in fraction_dirs:
-            fraction_dose_path = os.path.join(patient_path, fraction_dir, transformed_dose_file_name)
+            fraction_dose_path = os.path.join(patient_path, fraction_dir,
+                                              transformed_dose_file_name)
             dose_sum += sitk.ReadImage(fraction_dose_path, sitk.sitkFloat32)
-            total_doses += 1
 
     # save the summed dose in the planning dir name
     summed_dose_path = os.path.join(patient_path, planning_dir_name, summed_dose_file_name)
-    print('Saving summed dose, including', total_doses, 'total doses, to', summed_dose_path)
+    print('Saving summed dose to', summed_dose_path)
     sitk.WriteImage(dose_sum, summed_dose_path)
 
             
@@ -75,8 +69,6 @@ if __name__ == '__main__':
     parser.add_argument("transformed_dose_file_name",
                         help="Name of the dose files that will be summed,"
                              " assumed same for all fractions.")
-    parser.add_argument("--first-n", type=int, required=False,
-                        help="first n, number of patients to process (useful for testing)")
     parser.add_argument("--patient-dir", type=str, required=False,
                         help="patient to process (useful for testing)")
     parser.add_argument("--output-name", type=str, required=True,
@@ -89,6 +81,5 @@ if __name__ == '__main__':
                                config['plan_dir'],
                                config['plan_dose_file_name'],
                                config['transformed_dose_file_name'],
-                               config['first_n'],
                                config['patient_dir'],
                                config['output_name'])
