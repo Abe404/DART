@@ -35,7 +35,6 @@ def sum_doses_for_all_patients(in_dir, planning_dir_name,
         first_n - used to restrict processing for testing/debugging.
     """
     patient_dirs = os.listdir(in_dir)
-    total_doses = 0
     if patient_dir:
         patient_dirs = [patient_dir]
         print('Running on', patient_dirs, 'only')
