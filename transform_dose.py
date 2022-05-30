@@ -35,7 +35,7 @@ def transform_dose_to_fixed_image(moving_image_dir_path,
     """
 
     start_time = time.time()
-    output_path = os.path.join(moving_image_dir_path, 'transformed_to_fixed')
+    output_path = os.path.join(moving_image_dir_path, 'dose_transformed_to_fixed.nii.gz')
     moving_image_path = os.path.join(moving_image_dir_path, dose_file_name)
     
     # tranforms moving image to fixed image
@@ -53,7 +53,7 @@ def transform_dose_to_fixed_image(moving_image_dir_path,
 
 def transform_doses_to_fixed_images(in_dir, planning_dir_name,
                                     dose_file_name,
-                                    fixed_image_name, first_n):
+                                    fixed_image_name, first_n, patient_dir):
     """
         Transforms for all patients. 
         in_dir  - directory containing all the patient folders.
@@ -70,8 +70,12 @@ def transform_doses_to_fixed_images(in_dir, planning_dir_name,
     if first_n:
         patient_dirs = patient_dirs[:first_n]
 
-    for patient_dir in patient_dirs:
-        patient_path = os.path.join(in_dir, patient_dir)
+    if patient_dir:
+        patient_dirs = [patient_dir]
+        print('Running on', patient_dirs, 'only')
+
+    for patient in patient_dirs:
+        patient_path = os.path.join(in_dir, patient)
         fraction_dirs = os.listdir(patient_path)
         fraction_dirs = [d for d in fraction_dirs if d != planning_dir_name]
 
@@ -100,9 +104,14 @@ if __name__ == '__main__':
 
     parser.add_argument("--first-n", type=int, required=False,
                         help="first n, number of patients to process (useful for testing)")
+    parser.add_argument("--patient-dir", type=str, required=False,
+                        help="patient to process (useful for testing)")
+
     args = parser.parse_args()
     config = vars(args)
     print(config)
     transform_doses_to_fixed_images(config['input'], config['plan_dir'],
                                     config['dose_file_name'],
-                                    config['fixed_image_name'], config['first_n'])
+                                    config['fixed_image_name'],
+                                    config['first_n'],
+                                    config['patient_dir'])
