@@ -7,7 +7,7 @@
  >>>>>>---==(________)------
 //////
 
-Hit the bullseye with your dose accumulation
+Hit the bullseye with your dose accumulation!
 
 ```
 
