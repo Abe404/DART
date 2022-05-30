@@ -149,6 +149,9 @@ disable=print-statement,
 	invalid-name,
 	too-many-arguments,
 	logging-fstring-interpolation,
+	logging-format-interpolation,
+
+
 
 
 # Enable the message, report, category or checker with the given id(s). You can
